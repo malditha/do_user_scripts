@@ -34,7 +34,7 @@ unzip /tmp/wordpress.zip;
 /usr/bin/mysql -uroot -p$rootmysqlpass -e "GRANT ALL PRIVILEGES ON wordpress.* TO wordpress@localhost";
 # Configure PHP
 sed -i "s/cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php5/fpm/php.ini;
-sed -i "s|listen = 127.0.0.1:9000/listen = \/var\/run\/php5-fpm.sock|" /etc/php5/fpm/pool.d/www.conf;
+sed -i "s|listen = 127.0.0.1:9000|listen = /var/run/php5-fpm.sock|" /etc/php5/fpm/pool.d/www.conf;
 sudo service php5-fpm restart
 # Configure Nginx
 mv /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bak
