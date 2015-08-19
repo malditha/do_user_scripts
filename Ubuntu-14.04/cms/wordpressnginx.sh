@@ -16,7 +16,7 @@ echo "Wordpress MySQL Password: $wpmysqlpass" >> /root/passwords.txt;
 apt-get update;
 apt-get -y upgrade;
 # Install Nginx/MySQL
-apt-get -y install php5-fpm sudo apt-get install php5-mysql mysql-server mysql-client unzip;
+sudo apt-get install php5-fpm php5-mysql mysql-server mysql-client unzip;
 echo "deb http://ppa.launchpad.net/nginx/stable/ubuntu $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/nginx-stable.list
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys C300EE8C
 sudo apt-get update
@@ -34,7 +34,7 @@ unzip /tmp/wordpress.zip;
 /usr/bin/mysql -uroot -p$rootmysqlpass -e "GRANT ALL PRIVILEGES ON wordpress.* TO wordpress@localhost";
 # Configure PHP
 sed -i "s/cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php5/fpm/php.ini;
-sed -i "s/listen = 127.0.0.1:9000/listen = /var/run/php5-fpm.sock/" /etc/php5/fpm/pool.d/www.conf;
+sed -i "s|listen = 127.0.0.1:9000/listen = \/var\/run\/php5-fpm.sock|" /etc/php5/fpm/pool.d/www.conf;
 sudo service php5-fpm restart
 # Configure Nginx
 mv /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bak
