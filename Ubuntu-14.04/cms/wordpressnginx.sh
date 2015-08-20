@@ -10,17 +10,20 @@ export DEBIAN_FRONTEND=noninteractive;
 rootmysqlpass=`dd if=/dev/urandom bs=1 count=32 2>/dev/null | base64 -w 0 | rev | cut -b 2- | rev`
 wpmysqlpass=`dd if=/dev/urandom bs=1 count=32 2>/dev/null | base64 -w 0 | rev | cut -b 2- | rev`
 # Write passwords to file
-echo "Root MySQL Password: $rootmysqlpass" > /root/passwords.txt;
-echo "Wordpress MySQL Password: $wpmysqlpass" >> /root/passwords.txt;
+export DEBIAN_FRONTEND=noninteractive
+apt-get -q -y install mysql-server
 # Update Ubuntu
 apt-get update;
 apt-get -y upgrade;
 # Install Nginx/MySQL
-sudo apt-get install php5-fpm php5-mysql mysql-server mysql-client unzip;
+sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password password '
+sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password '
+sudo apt-get -y install mysql-server
+sudo apt-get install  php5-fpm php5-mysql mysql-client unzip;
 echo "deb http://ppa.launchpad.net/nginx/stable/ubuntu $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/nginx-stable.list
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys C300EE8C
 sudo apt-get update
-sudo apt-get install nginx
+sudo apt-get -y install nginx
 #start nginx
 sudo service nginx start
 # Download and uncompress WordPress
@@ -39,135 +42,37 @@ sudo service php5-fpm restart
 # Configure Nginx
 mv /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bak
 cat > /etc/nginx/sites-available/default << EOF
-# You may add here your
-# server {
-#	...
-# }
-# statements for each of your virtual hosts to this file
-
-##
-# You should look at the following URL's in order to grasp a solid understanding
-# of Nginx configuration files in order to fully unleash the power of Nginx.
-# http://wiki.nginx.org/Pitfalls
-# http://wiki.nginx.org/QuickStart
-# http://wiki.nginx.org/Configuration
-#
-# Generally, you will want to move this file somewhere, and start with a clean
-# file but keep this around for reference. Or just disable in sites-enabled.
-#
-# Please see /usr/share/doc/nginx-doc/examples/ for more detailed examples.
-##
-
 server {
 	listen 80 default_server;
-  listen [::]:80 default_server ipv6only=on;
-
-  root /var/www/;
-  index index.php;
-
-  # Make site accessible from http://localhost/
-  server_name localhost;
-
-  location / {
-  try_files \$uri \$uri/ =404;
-  # First attempt to serve request as file, then
-  # as directory, then fall back to displaying a 404.
-  # Uncomment to enable naxsi on this location
-  # include /etc/nginx/naxsi.rules
-}
-
+	listen [::]:80 default_server ipv6only=on;
+	root /var/www/html;
+	index index.php index.html index.htm;
+	server_name localhost;
+	location / {
+			# First attempt to serve request as file, then
+			# as directory, then fall back to displaying a 404.
+			try_files $uri $uri/ =404;
+			# Uncomment to enable naxsi on this location
+			# include /etc/nginx/naxsi.rules
+	}
 	error_page 404 /404.html;
 	error_page 500 502 503 504 /50x.html;
 	location = /50x.html {
-		root /usr/share/nginx/html;
+			root /usr/share/nginx/html;
 	}
-
 	location ~ \.php$ {
-		try_files \$uri \$uri/ =404;
-		fastcgi_split_path_info ^(.+\.php)(/.+)$;
-		fastcgi_pass unix:/var/run/php5-fpm.sock;
-		fastcgi_index index.php;
-		include /etc/nginx/fastcgi_params;
+			try_files $uri =404;
+			fastcgi_split_path_info ^(.+\.php)(/.+)$;
+			fastcgi_pass unix:/var/run/php5-fpm.sock;
+			fastcgi_index index.php;
+			include fastcgi.conf;
 	}
-
-	# Only for nginx-naxsi used with nginx-naxsi-ui : process denied requests
-	#location /RequestDenied {
-	#	proxy_pass http://127.0.0.1:8080;
-	#}
-
-	#error_page 404 /404.html;
-
-	# redirect server error pages to the static page /50x.html
-	#
-	#error_page 500 502 503 504 /50x.html;
-	#location = /50x.html {
-	#	root /usr/share/nginx/html;
-	#}
-
-	# pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
-	#
-	location ~ \.php$ {
-		fastcgi_split_path_info ^(.+\.php)(/.+)$;
-	#	# NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini
-	#
-	#	# With php5-cgi alone:
-	#	fastcgi_pass 127.0.0.1:9000;
-	#	# With php5-fpm:
-		fastcgi_pass unix:/var/run/php5-fpm.sock;
-		fastcgi_index index.php;
-		include fastcgi_params;
-	}
-
-	# deny access to .htaccess files, if Apache's document root
-	# concurs with nginx's one
-	#
-	#location ~ /\.ht {
-	#	deny all;
-	#}
 }
-
-
-# another virtual host using mix of IP-, name-, and port-based configuration
-#
-#server {
-#	listen 8000;
-#	listen somename:8080;
-#	server_name somename alias another.alias;
-#	root html;
-#	index index.html index.htm;
-#
-#	location / {
-#		try_files $uri $uri/ =404;
-#	}
-#}
-
-
-# HTTPS server
-#
-#server {
-#	listen 443;
-#	server_name localhost;
-#
-#	root html;
-#	index index.html index.htm;
-#
-#	ssl on;
-#	ssl_certificate cert.pem;
-#	ssl_certificate_key cert.key;
-#
-#	ssl_session_timeout 5m;
-#
-#	ssl_protocols SSLv3 TLSv1 TLSv1.1 TLSv1.2;
-#	ssl_ciphers "HIGH:!aNULL:!MD5 or HIGH:!aNULL:!MD5:!3DES";
-#	ssl_prefer_server_ciphers on;
-#
-#	location / {
-#		try_files $uri $uri/ =404;
-#	}
-#}
 EOF
 
 cat /etc/nginx/sites-available/default
+# Add PHP info
+cat > <?php phpinfo();? > /var/www/html/info.php
 # Configure Nginx sites-available
 sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/wordpress
 sudo rm /etc/nginx/sites-available/default
