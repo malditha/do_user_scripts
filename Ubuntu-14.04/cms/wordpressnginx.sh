@@ -60,22 +60,21 @@ cat > /etc/nginx/sites-available/default << EOF
 
 server {
 	listen 80 default_server;
-	listen [::]:80 default_server ipv6only=on;
+  listen [::]:80 default_server ipv6only=on;
 
-	root /var/www/;
-	index index.php index.html index.htm;
+  root /var/www/;
+  index index.php index.html index.htm;
 
-	# Make site accessible from http://localhost/
-	server_name example.com;
+  # Make site accessible from http://localhost/
+  server_name localhost;
 
-	location / {
-    try_files $uri $uri/ /index.php?q=$uri&$args;
-		# First attempt to serve request as file, then
-		# as directory, then fall back to displaying a 404.
-		try_files $uri $uri/ =404;
-		# Uncomment to enable naxsi on this location
-		# include /etc/nginx/naxsi.rules
-	}
+  location / {
+  try_files \$uri \$uri/ =404;
+  # First attempt to serve request as file, then
+  # as directory, then fall back to displaying a 404.
+  # Uncomment to enable naxsi on this location
+  # include /etc/nginx/naxsi.rules
+}
 
 	error_page 404 /404.html;
 	error_page 500 502 503 504 /50x.html;
@@ -84,7 +83,7 @@ server {
 	}
 
 	location ~ \.php$ {
-		try_files $uri =404;
+		try_files \$uri \$uri/ =404;
 		fastcgi_split_path_info ^(.+\.php)(/.+)$;
 		fastcgi_pass unix:/var/run/php5-fpm.sock;
 		fastcgi_index index.php;
@@ -169,9 +168,11 @@ server {
 EOF
 
 cat /etc/nginx/sites-available/default
-# Configure WordPress
+# Configure Nginx sites-available
 sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/wordpress
-
+sudo rm /etc/nginx/sites-available/default
+sudo ln -s /etc/nginx/sites-available/wordpress /etc/nginx/sites-available/wordpress
+#Configure WordPress
 cp /tmp/wordpress/wp-config-sample.php /tmp/wordpress/wp-config.php;
 sed -i "s/'DB_NAME', 'database_name_here'/'DB_NAME', 'wordpress'/g" /tmp/wordpress/wp-config.php;
 sed -i "s/'DB_USER', 'username_here'/'DB_USER', 'wordpress'/g" /tmp/wordpress/wp-config.php;
