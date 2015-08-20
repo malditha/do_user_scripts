@@ -33,7 +33,7 @@ unzip /tmp/wordpress.zip;
 /usr/bin/mysql -uroot -p$rootmysqlpass -e "CREATE USER wordpress@localhost IDENTIFIED BY '"$wpmysqlpass"'";
 /usr/bin/mysql -uroot -p$rootmysqlpass -e "GRANT ALL PRIVILEGES ON wordpress.* TO wordpress@localhost";
 # Configure PHP
-sed -i "s/cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php5/fpm/php.ini;
+sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php5/fpm/php.ini
 sed -i "s|listen = 127.0.0.1:9000|listen = /var/run/php5-fpm.sock|" /etc/php5/fpm/pool.d/www.conf;
 sudo service php5-fpm restart
 # Configure Nginx
@@ -63,7 +63,7 @@ server {
   listen [::]:80 default_server ipv6only=on;
 
   root /var/www/;
-  index index.php index.html index.htm;
+  index index.php;
 
   # Make site accessible from http://localhost/
   server_name localhost;
@@ -87,7 +87,7 @@ server {
 		fastcgi_split_path_info ^(.+\.php)(/.+)$;
 		fastcgi_pass unix:/var/run/php5-fpm.sock;
 		fastcgi_index index.php;
-		include fastcgi_params;
+		include /etc/nginx/fastcgi_params;
 	}
 
 	# Only for nginx-naxsi used with nginx-naxsi-ui : process denied requests
@@ -171,7 +171,8 @@ cat /etc/nginx/sites-available/default
 # Configure Nginx sites-available
 sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/wordpress
 sudo rm /etc/nginx/sites-available/default
-sudo ln -s /etc/nginx/sites-available/wordpress /etc/nginx/sites-available/wordpress
+sudo rm /etc/nginx/sites-enabled/default
+sudo ln -s /etc/nginx/sites-available/wordpress /etc/nginx/sites-enabled/wordpress
 #Configure WordPress
 cp /tmp/wordpress/wp-config-sample.php /tmp/wordpress/wp-config.php;
 sed -i "s/'DB_NAME', 'database_name_here'/'DB_NAME', 'wordpress'/g" /tmp/wordpress/wp-config.php;
