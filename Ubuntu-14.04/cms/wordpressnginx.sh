@@ -88,7 +88,7 @@ do
 wp_salt=$(</dev/urandom tr -dc 'a-zA-Z0-9!@#$%^&*()\-_ []{}<>~`+=,.;:/?|' | head -c 64 | sed -e 's/[\/&]/\\&/g');
 sed -i "0,/put your unique phrase here/s/put your unique phrase here/$wp_salt/" /tmp/wordpress/wp-config.php;
 done
-cp -Rf /tmp/wordpress/* /var/www/.;
+cp -Rf /tmp/wordpress/* /var/www/html/.;
 rm -f /var/www/index.html;
 chown -Rf www-data:www-data /var/www/;
 service nginx restart;
