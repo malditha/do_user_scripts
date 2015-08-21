@@ -11,9 +11,9 @@ wpmysqlpass=`dd if=/dev/urandom bs=1 count=32 2>/dev/null | base64 -w 0 | rev | 
 echo "MySQL Passwords for this droplet " > /etc/motd.tail;
 echo "-----------------------------------" >> /etc/motd.tail;
 echo "Root MySQL Password: $rootmysqlpass" >> /etc/motd.tail;
-echo "MediaWiki MySQL Database: mwdb" >> /etc/motd.tail;
-echo "Mediawiki MySQL Username: mwsql" >> /etc/motd.tail;
-echo "Mediawiki MySQL Password: $mwmysqlpass" >> /etc/motd.tail;
+echo "Wordpress MySQL Database: mwdb" >> /etc/motd.tail;
+echo "Wordpress MySQL Username: mwsql" >> /etc/motd.tail;
+echo "Wordpress MySQL Password: $wpmysqlpass" >> /etc/motd.tail;
 echo "-----------------------------------" >> /etc/motd.tail;
 echo "You can remove this information with 'rm -f /etc/motd.tail'" >> /etc/motd.tail;
 # Install mysql-server
@@ -58,7 +58,7 @@ server {
 	location / {
 			# First attempt to serve request as file, then
 			# as directory, then fall back to displaying a 404.
-			try_files $uri /$uri/ =404;
+			try_files $uri $uri/ /index.php?q=$uri&$args;
 			# Uncomment to enable naxsi on this location
 			# include /etc/nginx/naxsi.rules
 	}
@@ -89,7 +89,7 @@ sudo ln -s /etc/nginx/sites-available/wordpress /etc/nginx/sites-enabled/wordpre
 cp /tmp/wordpress/wp-config-sample.php /tmp/wordpress/wp-config.php;
 sed -i "s|'DB_NAME', 'database_name_here'|'DB_NAME', 'wordpress'|g" /tmp/wordpress/wp-config.php;
 sed -i "s/'DB_USER', 'username_here'/'DB_USER', 'wordpress'/g" /tmp/wordpress/wp-config.php;
-sed -i "s/'DB_PASSWORD', 'password_here'/'DB_PASSWORD', $wpmysqlpass'/g" /tmp/wordpress/wp-config.php;
+sed -i "s/'DB_PASSWORD', 'password_here'/'DB_PASSWORD', '$wpmysqlpass'/g" /tmp/wordpress/wp-config.php;
 for i in `seq 1 8`
 do
 wp_salt=$(</dev/urandom tr -dc 'a-zA-Z0-9!@#$%^&*()\-_ []{}<>~`+=,.;:/?|' | head -c 64 | sed -e 's/[\/&]/\\&/g');
