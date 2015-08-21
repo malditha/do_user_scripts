@@ -16,10 +16,10 @@ apt-get -q -y install mysql-server
 apt-get update;
 apt-get -y upgrade;
 # Install Nginx/MySQL
-sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password password '
-sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password '
-sudo apt-get -y install mysql-server
-sudo apt-get install  php5-fpm php5-mysql mysql-client unzip;
+secho mysql-server mysql-server/root_password password  | sudo debconf-set-selections
+echo mysql-server mysql-server/root_password_again password  | sudo debconf-set-selections
+sudo apt-get install mysql-server
+sudo apt-get install -y php5-fpm php5-mysql mysql-client unzip;
 echo "deb http://ppa.launchpad.net/nginx/stable/ubuntu $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/nginx-stable.list
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys C300EE8C
 sudo apt-get update
@@ -51,7 +51,7 @@ server {
 	location / {
 			# First attempt to serve request as file, then
 			# as directory, then fall back to displaying a 404.
-			try_files $uri $uri/ =404;
+			try_files /$uri /$uri/ =404;
 			# Uncomment to enable naxsi on this location
 			# include /etc/nginx/naxsi.rules
 	}
@@ -61,7 +61,7 @@ server {
 			root /usr/share/nginx/html;
 	}
 	location ~ \.php$ {
-			try_files $uri =404;
+			try_files /$uri =404;
 			fastcgi_split_path_info ^(.+\.php)(/.+)$;
 			fastcgi_pass unix:/var/run/php5-fpm.sock;
 			fastcgi_index index.php;
@@ -72,7 +72,7 @@ EOF
 
 cat /etc/nginx/sites-available/default
 # Add PHP info
-cat > <?php phpinfo();? > /var/www/html/info.php
+echo "<?php phpinfo();?>" > /var/www/html/info.php
 # Configure Nginx sites-available
 sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/wordpress
 sudo rm /etc/nginx/sites-available/default
