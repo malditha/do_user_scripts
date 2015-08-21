@@ -48,7 +48,7 @@ sed -i "s|listen = 127.0.0.1:9000|listen = /var/run/php5-fpm.sock|" /etc/php5/fp
 sudo service php5-fpm restart
 # Configure Nginx
 mv /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bak
-cat > /etc/nginx/sites-available/default << EOF
+cat > /etc/nginx/sites-available/default << "EOF"
 server {
 	listen 80 default_server;
 	listen [::]:80 default_server ipv6only=on;
