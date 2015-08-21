@@ -4,19 +4,26 @@
 #
 # This script will install and configure WordPress on
 # an Ubuntu 14.04 droplet
-export DEBIAN_FRONTEND=noninteractive;
-
 # Generate root and wordpress mysql passwords
 rootmysqlpass=`dd if=/dev/urandom bs=1 count=32 2>/dev/null | base64 -w 0 | rev | cut -b 2- | rev`
 wpmysqlpass=`dd if=/dev/urandom bs=1 count=32 2>/dev/null | base64 -w 0 | rev | cut -b 2- | rev`
 # Write passwords to file
+echo "MySQL Passwords for this droplet " > /etc/motd.tail;
+echo "-----------------------------------" >> /etc/motd.tail;
+echo "Root MySQL Password: $rootmysqlpass" >> /etc/motd.tail;
+echo "MediaWiki MySQL Database: mwdb" >> /etc/motd.tail;
+echo "Mediawiki MySQL Username: mwsql" >> /etc/motd.tail;
+echo "Mediawiki MySQL Password: $mwmysqlpass" >> /etc/motd.tail;
+echo "-----------------------------------" >> /etc/motd.tail;
+echo "You can remove this information with 'rm -f /etc/motd.tail'" >> /etc/motd.tail;
+# Install mysql-server
 export DEBIAN_FRONTEND=noninteractive
 apt-get -q -y install mysql-server
 # Update Ubuntu
 apt-get update;
 apt-get -y upgrade;
 # Install Nginx/MySQL
-secho mysql-server mysql-server/root_password password  | sudo debconf-set-selections
+echo mysql-server mysql-server/root_password password  | sudo debconf-set-selections
 echo mysql-server mysql-server/root_password_again password  | sudo debconf-set-selections
 sudo apt-get install mysql-server
 sudo apt-get install -y php5-fpm php5-mysql mysql-client unzip;
@@ -51,7 +58,7 @@ server {
 	location / {
 			# First attempt to serve request as file, then
 			# as directory, then fall back to displaying a 404.
-			try_files /$uri /$uri/ =404;
+			try_files "$uri /$uri/ =404;"
 			# Uncomment to enable naxsi on this location
 			# include /etc/nginx/naxsi.rules
 	}
@@ -61,7 +68,7 @@ server {
 			root /usr/share/nginx/html;
 	}
 	location ~ \.php$ {
-			try_files /$uri =404;
+			try_files $uri =404;
 			fastcgi_split_path_info ^(.+\.php)(/.+)$;
 			fastcgi_pass unix:/var/run/php5-fpm.sock;
 			fastcgi_index index.php;
@@ -80,9 +87,9 @@ sudo rm /etc/nginx/sites-enabled/default
 sudo ln -s /etc/nginx/sites-available/wordpress /etc/nginx/sites-enabled/wordpress
 #Configure WordPress
 cp /tmp/wordpress/wp-config-sample.php /tmp/wordpress/wp-config.php;
-sed -i "s/DB_NAME, database_name_here/DB_NAME, wordpress/g" /tmp/wordpress/wp-config.php;
-sed -i "s/DB_USER, username_here/DB_USER, wordpress/g" /tmp/wordpress/wp-config.php;
-sed -i "s/DB_PASSWORD, password_here/DB_PASSWORD, $wpmysqlpass/g" /tmp/wordpress/wp-config.php;
+sed -i "s|'DB_NAME', 'database_name_here'|'DB_NAME', 'wordpress'|g" /tmp/wordpress/wp-config.php;
+sed -i "s/'DB_USER', 'username_here'/'DB_USER', 'wordpress'/g" /tmp/wordpress/wp-config.php;
+sed -i "s/'DB_PASSWORD', 'password_here'/'DB_PASSWORD', $wpmysqlpass'/g" /tmp/wordpress/wp-config.php;
 for i in `seq 1 8`
 do
 wp_salt=$(</dev/urandom tr -dc 'a-zA-Z0-9!@#$%^&*()\-_ []{}<>~`+=,.;:/?|' | head -c 64 | sed -e 's/[\/&]/\\&/g');
@@ -90,5 +97,5 @@ sed -i "0,/put your unique phrase here/s/put your unique phrase here/$wp_salt/" 
 done
 cp -Rf /tmp/wordpress/* /var/www/html/.;
 rm -f /var/www/index.html;
-chown -Rf www-data:www-data /var/www/;
+chown -Rf www-data:www-data /var/www/html;
 service nginx restart;
