@@ -80,9 +80,9 @@ sudo rm /etc/nginx/sites-enabled/default
 sudo ln -s /etc/nginx/sites-available/wordpress /etc/nginx/sites-enabled/wordpress
 #Configure WordPress
 cp /tmp/wordpress/wp-config-sample.php /tmp/wordpress/wp-config.php;
-sed -i "s/'DB_NAME', 'database_name_here'/'DB_NAME', 'wordpress'/g" /tmp/wordpress/wp-config.php;
-sed -i "s/'DB_USER', 'username_here'/'DB_USER', 'wordpress'/g" /tmp/wordpress/wp-config.php;
-sed -i "s/'DB_PASSWORD', 'password_here'/'DB_PASSWORD', $wpmysqlpass'/g" /tmp/wordpress/wp-config.php;
+sed -i "s/DB_NAME, database_name_here/DB_NAME, wordpress/g" /tmp/wordpress/wp-config.php;
+sed -i "s/DB_USER, username_here/DB_USER, wordpress/g" /tmp/wordpress/wp-config.php;
+sed -i "s/DB_PASSWORD, password_here/DB_PASSWORD, $wpmysqlpass/g" /tmp/wordpress/wp-config.php;
 for i in `seq 1 8`
 do
 wp_salt=$(</dev/urandom tr -dc 'a-zA-Z0-9!@#$%^&*()\-_ []{}<>~`+=,.;:/?|' | head -c 64 | sed -e 's/[\/&]/\\&/g');
